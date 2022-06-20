@@ -10,6 +10,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"time"
@@ -28,14 +29,17 @@ func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := zdpgo_orm.Open(mysql.Open(dsn), &zdpgo_orm.Config{})
 	if err != nil {
-		panic(err)
+		panic("failed to connect database")
 	}
 
 	// 创建数据库表
 	db.AutoMigrate(&User{})
 
-	// 创建记录并更新给出的字段。
-	var user = User{Name: "王五", Age: 18, Birthday: time.Now()}
-	db.Select("Name", "Age", "CreatedAt").Create(&user)
-	// INSERT INTO `users` (`name`,`age`,`created_at`) VALUES ("王五", 18, "2020-07-04 11:05:21.775")
+	// 使用 CreateInBatches 分批创建时，你可以指定每批的数量，例如：
+	var users = []User{{Name: "张珊珊1"}, {Name: "李思思2"}, {Name: "王舞儿3"}}
+	db.CreateInBatches(users, 100)
+
+	for _, user := range users {
+		fmt.Println(user.ID)
+	}
 }
