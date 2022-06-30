@@ -1,4 +1,4 @@
-package zdpgo_orm
+package gorm
 
 import (
 	"errors"

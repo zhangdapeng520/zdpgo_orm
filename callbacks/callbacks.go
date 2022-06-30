@@ -1,7 +1,7 @@
 package callbacks
 
 import (
-	"github.com/zhangdapeng520/zdpgo_orm"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 )
 
 var (
@@ -19,8 +19,8 @@ type Config struct {
 	DeleteClauses        []string
 }
 
-func RegisterDefaultCallbacks(db *zdpgo_orm.DB, config *Config) {
-	enableTransaction := func(db *zdpgo_orm.DB) bool {
+func RegisterDefaultCallbacks(db *gorm.DB, config *Config) {
+	enableTransaction := func(db *gorm.DB) bool {
 		return !db.SkipDefaultTransaction
 	}
 

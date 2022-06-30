@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"math"
 	"strings"
 	"time"
@@ -22,7 +22,7 @@ type Config struct {
 	DriverName                    string
 	ServerVersion                 string
 	DSN                           string
-	Conn                          zdpgo_orm.ConnPool
+	Conn                          gorm.ConnPool
 	SkipInitializeWithVersion     bool
 	DefaultStringSize             uint
 	DefaultDatetimePrecision      *int
@@ -50,11 +50,11 @@ var (
 	defaultDatetimePrecision = 3
 )
 
-func Open(dsn string) zdpgo_orm.Dialector {
+func Open(dsn string) gorm.Dialector {
 	return &Dialector{Config: &Config{DSN: dsn}}
 }
 
-func New(config Config) zdpgo_orm.Dialector {
+func New(config Config) gorm.Dialector {
 	return &Dialector{Config: &config}
 }
 
@@ -70,7 +70,7 @@ func (dialector Dialector) NowFunc(n int) func() time.Time {
 	}
 }
 
-func (dialector Dialector) Apply(config *zdpgo_orm.Config) error {
+func (dialector Dialector) Apply(config *gorm.Config) error {
 	if config.NowFunc == nil {
 		if dialector.DefaultDatetimePrecision == nil {
 			dialector.DefaultDatetimePrecision = &defaultDatetimePrecision
@@ -84,7 +84,7 @@ func (dialector Dialector) Apply(config *zdpgo_orm.Config) error {
 	return nil
 }
 
-func (dialector Dialector) Initialize(db *zdpgo_orm.DB) (err error) {
+func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
 	ctx := context.Background()
 
 	// register callbacks
@@ -164,7 +164,7 @@ func (dialector Dialector) ClauseBuilders() map[string]clause.ClauseBuilder {
 
 			builder.WriteString("ON DUPLICATE KEY UPDATE ")
 			if len(onConflict.DoUpdates) == 0 {
-				if s := builder.(*zdpgo_orm.Statement).Schema; s != nil {
+				if s := builder.(*gorm.Statement).Schema; s != nil {
 					var column clause.Column
 					onConflict.DoNothing = false
 
@@ -223,7 +223,7 @@ func (dialector Dialector) DefaultValueOf(field *schema.Field) clause.Expression
 	return clause.Expr{SQL: "DEFAULT"}
 }
 
-func (dialector Dialector) Migrator(db *zdpgo_orm.DB) zdpgo_orm.Migrator {
+func (dialector Dialector) Migrator(db *gorm.DB) gorm.Migrator {
 	return Migrator{
 		Migrator: migrator.Migrator{
 			Config: migrator.Config{
@@ -235,7 +235,7 @@ func (dialector Dialector) Migrator(db *zdpgo_orm.DB) zdpgo_orm.Migrator {
 	}
 }
 
-func (dialector Dialector) BindVarTo(writer clause.Writer, stmt *zdpgo_orm.Statement, v interface{}) {
+func (dialector Dialector) BindVarTo(writer clause.Writer, stmt *gorm.Statement, v interface{}) {
 	writer.WriteByte('?')
 }
 
@@ -399,10 +399,10 @@ func (dialector Dialector) getSchemaIntAndUnitType(field *schema.Field) string {
 	return sqlType
 }
 
-func (dialector Dialector) SavePoint(tx *zdpgo_orm.DB, name string) error {
+func (dialector Dialector) SavePoint(tx *gorm.DB, name string) error {
 	return tx.Exec("SAVEPOINT " + name).Error
 }
 
-func (dialector Dialector) RollbackTo(tx *zdpgo_orm.DB, name string) error {
+func (dialector Dialector) RollbackTo(tx *gorm.DB, name string) error {
 	return tx.Exec("ROLLBACK TO SAVEPOINT " + name).Error
 }

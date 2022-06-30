@@ -2,15 +2,15 @@ package callbacks
 
 import (
 	"fmt"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 	"sort"
 	"strings"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 )
 
-func Query(db *zdpgo_orm.DB) {
+func Query(db *gorm.DB) {
 	if db.Error == nil {
 		BuildQuerySQL(db)
 
@@ -23,12 +23,12 @@ func Query(db *zdpgo_orm.DB) {
 			defer func() {
 				db.AddError(rows.Close())
 			}()
-			zdpgo_orm.Scan(rows, db, 0)
+			gorm.Scan(rows, db, 0)
 		}
 	}
 }
 
-func BuildQuerySQL(db *zdpgo_orm.DB) {
+func BuildQuerySQL(db *gorm.DB) {
 	if db.Statement.Schema != nil {
 		for _, c := range db.Statement.Schema.QueryClauses {
 			db.Statement.AddClause(c)
@@ -83,7 +83,7 @@ func BuildQuerySQL(db *zdpgo_orm.DB) {
 			}
 
 			if queryFields {
-				stmt := zdpgo_orm.Statement{DB: db}
+				stmt := gorm.Statement{DB: db}
 				// smaller struct
 				if err := stmt.Parse(db.Statement.Dest); err == nil && (db.QueryFields || stmt.Schema.ModelType != db.Statement.Schema.ModelType) {
 					clauseSelect.Columns = make([]clause.Column, len(stmt.Schema.DBNames))
@@ -148,7 +148,7 @@ func BuildQuerySQL(db *zdpgo_orm.DB) {
 					}
 
 					{
-						onStmt := zdpgo_orm.Statement{Table: tableAliasName, DB: db, Clauses: map[string]clause.Clause{}}
+						onStmt := gorm.Statement{Table: tableAliasName, DB: db, Clauses: map[string]clause.Clause{}}
 						for _, c := range relation.FieldSchema.QueryClauses {
 							onStmt.AddClause(c)
 						}
@@ -200,10 +200,10 @@ func BuildQuerySQL(db *zdpgo_orm.DB) {
 	}
 }
 
-func Preload(db *zdpgo_orm.DB) {
+func Preload(db *gorm.DB) {
 	if db.Error == nil && len(db.Statement.Preloads) > 0 {
 		if db.Statement.Schema == nil {
-			db.AddError(fmt.Errorf("%w when using preload", zdpgo_orm.ErrModelValueRequired))
+			db.AddError(fmt.Errorf("%w when using preload", gorm.ErrModelValueRequired))
 			return
 		}
 
@@ -239,7 +239,7 @@ func Preload(db *zdpgo_orm.DB) {
 		}
 		sort.Strings(preloadNames)
 
-		preloadDB := db.Session(&zdpgo_orm.Session{Context: db.Statement.Context, NewDB: true, SkipHooks: db.Statement.SkipHooks, Initialized: true})
+		preloadDB := db.Session(&gorm.Session{Context: db.Statement.Context, NewDB: true, SkipHooks: db.Statement.SkipHooks, Initialized: true})
 		db.Statement.Settings.Range(func(k, v interface{}) bool {
 			preloadDB.Statement.Settings.Store(k, v)
 			return true
@@ -252,17 +252,17 @@ func Preload(db *zdpgo_orm.DB) {
 
 		for _, name := range preloadNames {
 			if rel := preloadDB.Statement.Schema.Relationships.Relations[name]; rel != nil {
-				db.AddError(preload(preloadDB.Table("").Session(&zdpgo_orm.Session{Context: db.Statement.Context, SkipHooks: db.Statement.SkipHooks}), rel, append(db.Statement.Preloads[name], db.Statement.Preloads[clause.Associations]...), preloadMap[name]))
+				db.AddError(preload(preloadDB.Table("").Session(&gorm.Session{Context: db.Statement.Context, SkipHooks: db.Statement.SkipHooks}), rel, append(db.Statement.Preloads[name], db.Statement.Preloads[clause.Associations]...), preloadMap[name]))
 			} else {
-				db.AddError(fmt.Errorf("%s: %w for schema %s", name, zdpgo_orm.ErrUnsupportedRelation, db.Statement.Schema.Name))
+				db.AddError(fmt.Errorf("%s: %w for schema %s", name, gorm.ErrUnsupportedRelation, db.Statement.Schema.Name))
 			}
 		}
 	}
 }
 
-func AfterQuery(db *zdpgo_orm.DB) {
+func AfterQuery(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && db.Statement.Schema.AfterFind && db.RowsAffected > 0 {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) bool {
+		callMethod(db, func(value interface{}, tx *gorm.DB) bool {
 			if i, ok := value.(AfterFindInterface); ok {
 				db.AddError(i.AfterFind(tx))
 				return true

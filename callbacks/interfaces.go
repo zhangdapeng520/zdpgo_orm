@@ -1,39 +1,41 @@
 package callbacks
 
-import "github.com/zhangdapeng520/zdpgo_orm"
+import (
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+)
 
 type BeforeCreateInterface interface {
-	BeforeCreate(*zdpgo_orm.DB) error
+	BeforeCreate(*gorm.DB) error
 }
 
 type AfterCreateInterface interface {
-	AfterCreate(*zdpgo_orm.DB) error
+	AfterCreate(*gorm.DB) error
 }
 
 type BeforeUpdateInterface interface {
-	BeforeUpdate(*zdpgo_orm.DB) error
+	BeforeUpdate(*gorm.DB) error
 }
 
 type AfterUpdateInterface interface {
-	AfterUpdate(*zdpgo_orm.DB) error
+	AfterUpdate(*gorm.DB) error
 }
 
 type BeforeSaveInterface interface {
-	BeforeSave(*zdpgo_orm.DB) error
+	BeforeSave(*gorm.DB) error
 }
 
 type AfterSaveInterface interface {
-	AfterSave(*zdpgo_orm.DB) error
+	AfterSave(*gorm.DB) error
 }
 
 type BeforeDeleteInterface interface {
-	BeforeDelete(*zdpgo_orm.DB) error
+	BeforeDelete(*gorm.DB) error
 }
 
 type AfterDeleteInterface interface {
-	AfterDelete(*zdpgo_orm.DB) error
+	AfterDelete(*gorm.DB) error
 }
 
 type AfterFindInterface interface {
-	AfterFind(*zdpgo_orm.DB) error
+	AfterFind(*gorm.DB) error
 }

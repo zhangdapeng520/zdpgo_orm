@@ -1,16 +1,16 @@
 package callbacks
 
 import (
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 	"sort"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
 	"github.com/zhangdapeng520/zdpgo_orm/utils"
 )
 
-func SetupUpdateReflectValue(db *zdpgo_orm.DB) {
+func SetupUpdateReflectValue(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil {
 		if !db.Statement.ReflectValue.CanAddr() || db.Statement.Model != db.Statement.Dest {
 			db.Statement.ReflectValue = reflect.ValueOf(db.Statement.Model)
@@ -30,9 +30,9 @@ func SetupUpdateReflectValue(db *zdpgo_orm.DB) {
 }
 
 // BeforeUpdate before update hooks
-func BeforeUpdate(db *zdpgo_orm.DB) {
+func BeforeUpdate(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && (db.Statement.Schema.BeforeSave || db.Statement.Schema.BeforeUpdate) {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) (called bool) {
+		callMethod(db, func(value interface{}, tx *gorm.DB) (called bool) {
 			if db.Statement.Schema.BeforeSave {
 				if i, ok := value.(BeforeSaveInterface); ok {
 					called = true
@@ -53,10 +53,10 @@ func BeforeUpdate(db *zdpgo_orm.DB) {
 }
 
 // Update update hook
-func Update(config *Config) func(db *zdpgo_orm.DB) {
+func Update(config *Config) func(db *gorm.DB) {
 	supportReturning := utils.Contains(config.UpdateClauses, "RETURNING")
 
-	return func(db *zdpgo_orm.DB) {
+	return func(db *gorm.DB) {
 		if db.Error != nil {
 			return
 		}
@@ -86,7 +86,7 @@ func Update(config *Config) func(db *zdpgo_orm.DB) {
 				if rows, err := db.Statement.ConnPool.QueryContext(db.Statement.Context, db.Statement.SQL.String(), db.Statement.Vars...); db.AddError(err) == nil {
 					dest := db.Statement.Dest
 					db.Statement.Dest = db.Statement.ReflectValue.Addr().Interface()
-					zdpgo_orm.Scan(rows, db, mode)
+					gorm.Scan(rows, db, mode)
 					db.Statement.Dest = dest
 					db.AddError(rows.Close())
 				}
@@ -102,9 +102,9 @@ func Update(config *Config) func(db *zdpgo_orm.DB) {
 }
 
 // AfterUpdate after update hooks
-func AfterUpdate(db *zdpgo_orm.DB) {
+func AfterUpdate(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && (db.Statement.Schema.AfterSave || db.Statement.Schema.AfterUpdate) {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) (called bool) {
+		callMethod(db, func(value interface{}, tx *gorm.DB) (called bool) {
 			if db.Statement.Schema.AfterUpdate {
 				if i, ok := value.(AfterUpdateInterface); ok {
 					called = true
@@ -125,7 +125,7 @@ func AfterUpdate(db *zdpgo_orm.DB) {
 }
 
 // ConvertToAssignments convert to update assignments
-func ConvertToAssignments(stmt *zdpgo_orm.Statement) (set clause.Set) {
+func ConvertToAssignments(stmt *gorm.Statement) (set clause.Set) {
 	var (
 		selectColumns, restricted = stmt.SelectAndOmitColumns(false, true)
 		assignValue               func(field *schema.Field, value interface{})
@@ -195,7 +195,7 @@ func ConvertToAssignments(stmt *zdpgo_orm.Statement) (set clause.Set) {
 
 		for _, k := range keys {
 			kv := value[k]
-			if _, ok := kv.(*zdpgo_orm.DB); ok {
+			if _, ok := kv.(*gorm.DB); ok {
 				kv = []interface{}{kv}
 			}
 
@@ -243,7 +243,7 @@ func ConvertToAssignments(stmt *zdpgo_orm.Statement) (set clause.Set) {
 		updatingSchema := stmt.Schema
 		if !updatingValue.CanAddr() || stmt.Dest != stmt.Model {
 			// different schema
-			updatingStmt := &zdpgo_orm.Statement{DB: stmt.DB}
+			updatingStmt := &gorm.Statement{DB: stmt.DB}
 			if err := updatingStmt.Parse(stmt.Dest); err == nil {
 				updatingSchema = updatingStmt.Schema
 			}
@@ -283,7 +283,7 @@ func ConvertToAssignments(stmt *zdpgo_orm.Statement) (set clause.Set) {
 				}
 			}
 		default:
-			stmt.AddError(zdpgo_orm.ErrInvalidData)
+			stmt.AddError(gorm.ErrInvalidData)
 		}
 	}
 

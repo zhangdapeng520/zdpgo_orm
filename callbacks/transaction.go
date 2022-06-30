@@ -1,15 +1,15 @@
 package callbacks
 
 import (
-	"github.com/zhangdapeng520/zdpgo_orm"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 )
 
-func BeginTransaction(db *zdpgo_orm.DB) {
+func BeginTransaction(db *gorm.DB) {
 	if !db.Config.SkipDefaultTransaction && db.Error == nil {
 		if tx := db.Begin(); tx.Error == nil {
 			db.Statement.ConnPool = tx.Statement.ConnPool
 			db.InstanceSet("gorm:started_transaction", true)
-		} else if tx.Error == zdpgo_orm.ErrInvalidTransaction {
+		} else if tx.Error == gorm.ErrInvalidTransaction {
 			tx.Error = nil
 		} else {
 			db.Error = tx.Error
@@ -17,7 +17,7 @@ func BeginTransaction(db *zdpgo_orm.DB) {
 	}
 }
 
-func CommitOrRollbackTransaction(db *zdpgo_orm.DB) {
+func CommitOrRollbackTransaction(db *gorm.DB) {
 	if !db.Config.SkipDefaultTransaction {
 		if _, ok := db.InstanceGet("gorm:started_transaction"); ok {
 			if db.Error != nil {

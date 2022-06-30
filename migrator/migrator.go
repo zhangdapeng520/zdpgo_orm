@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 	"regexp"
 	"strings"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
 )
@@ -27,18 +27,18 @@ type Migrator struct {
 // Config schema config
 type Config struct {
 	CreateIndexAfterCreateTable bool
-	DB                          *zdpgo_orm.DB
-	zdpgo_orm.Dialector
+	DB                          *gorm.DB
+	gorm.Dialector
 }
 
 // GormDataTypeInterface gorm data type interface
 type GormDataTypeInterface interface {
-	GormDBDataType(*zdpgo_orm.DB, *schema.Field) string
+	GormDBDataType(*gorm.DB, *schema.Field) string
 }
 
 // RunWithValue run migration with statement value
-func (m Migrator) RunWithValue(value interface{}, fc func(*zdpgo_orm.Statement) error) error {
-	stmt := &zdpgo_orm.Statement{DB: m.DB}
+func (m Migrator) RunWithValue(value interface{}, fc func(*gorm.Statement) error) error {
+	stmt := &gorm.Statement{DB: m.DB}
 	if m.DB.Statement != nil {
 		stmt.Table = m.DB.Statement.Table
 		stmt.TableExpr = m.DB.Statement.TableExpr
@@ -79,7 +79,7 @@ func (m Migrator) FullDataTypeOf(field *schema.Field) (expr clause.Expr) {
 
 	if field.HasDefaultValue && (field.DefaultValueInterface != nil || field.DefaultValue != "") {
 		if field.DefaultValueInterface != nil {
-			defaultStmt := &zdpgo_orm.Statement{Vars: []interface{}{field.DefaultValueInterface}}
+			defaultStmt := &gorm.Statement{Vars: []interface{}{field.DefaultValueInterface}}
 			m.Dialector.BindVarTo(defaultStmt, defaultStmt, field.DefaultValueInterface)
 			expr.SQL += " DEFAULT " + m.Dialector.Explain(defaultStmt.SQL.String(), field.DefaultValueInterface)
 		} else if field.DefaultValue != "(-)" {
@@ -93,13 +93,13 @@ func (m Migrator) FullDataTypeOf(field *schema.Field) (expr clause.Expr) {
 // AutoMigrate auto migrate values
 func (m Migrator) AutoMigrate(values ...interface{}) error {
 	for _, value := range m.ReorderModels(values, true) {
-		tx := m.DB.Session(&zdpgo_orm.Session{})
+		tx := m.DB.Session(&gorm.Session{})
 		if !tx.Migrator().HasTable(value) {
 			if err := tx.Migrator().CreateTable(value); err != nil {
 				return err
 			}
 		} else {
-			if err := m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) (errr error) {
+			if err := m.RunWithValue(value, func(stmt *gorm.Statement) (errr error) {
 				columnTypes, err := m.DB.Migrator().ColumnTypes(value)
 				if err != nil {
 					return err
@@ -107,7 +107,7 @@ func (m Migrator) AutoMigrate(values ...interface{}) error {
 
 				for _, dbName := range stmt.Schema.DBNames {
 					field := stmt.Schema.FieldsByDBName[dbName]
-					var foundColumn zdpgo_orm.ColumnType
+					var foundColumn gorm.ColumnType
 
 					for _, columnType := range columnTypes {
 						if columnType.Name() == dbName {
@@ -174,8 +174,8 @@ func (m Migrator) GetTables() (tableList []string, err error) {
 // CreateTable create table in database for values
 func (m Migrator) CreateTable(values ...interface{}) error {
 	for _, value := range m.ReorderModels(values, false) {
-		tx := m.DB.Session(&zdpgo_orm.Session{})
-		if err := m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) (errr error) {
+		tx := m.DB.Session(&gorm.Session{})
+		if err := m.RunWithValue(value, func(stmt *gorm.Statement) (errr error) {
 			var (
 				createTableSQL          = "CREATE TABLE ? ("
 				values                  = []interface{}{m.CurrentTable(stmt)}
@@ -266,8 +266,8 @@ func (m Migrator) CreateTable(values ...interface{}) error {
 func (m Migrator) DropTable(values ...interface{}) error {
 	values = m.ReorderModels(values, false)
 	for i := len(values) - 1; i >= 0; i-- {
-		tx := m.DB.Session(&zdpgo_orm.Session{})
-		if err := m.RunWithValue(values[i], func(stmt *zdpgo_orm.Statement) error {
+		tx := m.DB.Session(&gorm.Session{})
+		if err := m.RunWithValue(values[i], func(stmt *gorm.Statement) error {
 			return tx.Exec("DROP TABLE IF EXISTS ?", m.CurrentTable(stmt)).Error
 		}); err != nil {
 			return err
@@ -280,7 +280,7 @@ func (m Migrator) DropTable(values ...interface{}) error {
 func (m Migrator) HasTable(value interface{}) bool {
 	var count int64
 
-	m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		currentDatabase := m.DB.Migrator().CurrentDatabase()
 		return m.DB.Raw("SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?", currentDatabase, stmt.Table, "BASE TABLE").Row().Scan(&count)
 	})
@@ -294,7 +294,7 @@ func (m Migrator) RenameTable(oldName, newName interface{}) error {
 	if v, ok := oldName.(string); ok {
 		oldTable = clause.Table{Name: v}
 	} else {
-		stmt := &zdpgo_orm.Statement{DB: m.DB}
+		stmt := &gorm.Statement{DB: m.DB}
 		if err := stmt.Parse(oldName); err == nil {
 			oldTable = m.CurrentTable(stmt)
 		} else {
@@ -305,7 +305,7 @@ func (m Migrator) RenameTable(oldName, newName interface{}) error {
 	if v, ok := newName.(string); ok {
 		newTable = clause.Table{Name: v}
 	} else {
-		stmt := &zdpgo_orm.Statement{DB: m.DB}
+		stmt := &gorm.Statement{DB: m.DB}
 		if err := stmt.Parse(newName); err == nil {
 			newTable = m.CurrentTable(stmt)
 		} else {
@@ -318,7 +318,7 @@ func (m Migrator) RenameTable(oldName, newName interface{}) error {
 
 // AddColumn create `name` column for value
 func (m Migrator) AddColumn(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		// avoid using the same name field
 		f := stmt.Schema.LookUpField(name)
 		if f == nil {
@@ -338,7 +338,7 @@ func (m Migrator) AddColumn(value interface{}, name string) error {
 
 // DropColumn drop value's `name` column
 func (m Migrator) DropColumn(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(name); field != nil {
 			name = field.DBName
 		}
@@ -351,7 +351,7 @@ func (m Migrator) DropColumn(value interface{}, name string) error {
 
 // AlterColumn alter value's `field` column' type based on schema definition
 func (m Migrator) AlterColumn(value interface{}, field string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(field); field != nil {
 			fileType := m.FullDataTypeOf(field)
 			return m.DB.Exec(
@@ -367,7 +367,7 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 // HasColumn check has column `field` for value or not
 func (m Migrator) HasColumn(value interface{}, field string) bool {
 	var count int64
-	m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		currentDatabase := m.DB.Migrator().CurrentDatabase()
 		name := field
 		if field := stmt.Schema.LookUpField(field); field != nil {
@@ -385,7 +385,7 @@ func (m Migrator) HasColumn(value interface{}, field string) bool {
 
 // RenameColumn rename value's field name from oldName to newName
 func (m Migrator) RenameColumn(value interface{}, oldName, newName string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(oldName); field != nil {
 			oldName = field.DBName
 		}
@@ -402,7 +402,7 @@ func (m Migrator) RenameColumn(value interface{}, oldName, newName string) error
 }
 
 // MigrateColumn migrate column
-func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnType zdpgo_orm.ColumnType) error {
+func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnType gorm.ColumnType) error {
 	// found, smart migrate
 	fullDataType := strings.ToLower(m.DB.Migrator().FullDataTypeOf(field).SQL)
 	realDataType := strings.ToLower(columnType.DatabaseTypeName())
@@ -482,10 +482,10 @@ func (m Migrator) MigrateColumn(value interface{}, field *schema.Field, columnTy
 }
 
 // ColumnTypes return columnTypes []zdpgo_orm.ColumnType and execErr error
-func (m Migrator) ColumnTypes(value interface{}) ([]zdpgo_orm.ColumnType, error) {
-	columnTypes := make([]zdpgo_orm.ColumnType, 0)
-	execErr := m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) (err error) {
-		rows, err := m.DB.Session(&zdpgo_orm.Session{}).Table(stmt.Table).Limit(1).Rows()
+func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
+	columnTypes := make([]gorm.ColumnType, 0)
+	execErr := m.RunWithValue(value, func(stmt *gorm.Statement) (err error) {
+		rows, err := m.DB.Session(&gorm.Session{}).Table(stmt.Table).Limit(1).Rows()
 		if err != nil {
 			return err
 		}
@@ -511,13 +511,13 @@ func (m Migrator) ColumnTypes(value interface{}) ([]zdpgo_orm.ColumnType, error)
 }
 
 // CreateView create view
-func (m Migrator) CreateView(name string, option zdpgo_orm.ViewOption) error {
-	return zdpgo_orm.ErrNotImplemented
+func (m Migrator) CreateView(name string, option gorm.ViewOption) error {
+	return gorm.ErrNotImplemented
 }
 
 // DropView drop view
 func (m Migrator) DropView(name string) error {
-	return zdpgo_orm.ErrNotImplemented
+	return gorm.ErrNotImplemented
 }
 
 func buildConstraint(constraint *schema.Constraint) (sql string, results []interface{}) {
@@ -543,7 +543,7 @@ func buildConstraint(constraint *schema.Constraint) (sql string, results []inter
 }
 
 // GuessConstraintAndTable guess statement's constraint and it's table based on name
-func (m Migrator) GuessConstraintAndTable(stmt *zdpgo_orm.Statement, name string) (_ *schema.Constraint, _ *schema.Check, table string) {
+func (m Migrator) GuessConstraintAndTable(stmt *gorm.Statement, name string) (_ *schema.Constraint, _ *schema.Check, table string) {
 	if stmt.Schema == nil {
 		return nil, nil, stmt.Table
 	}
@@ -589,7 +589,7 @@ func (m Migrator) GuessConstraintAndTable(stmt *zdpgo_orm.Statement, name string
 
 // CreateConstraint create constraint
 func (m Migrator) CreateConstraint(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		constraint, chk, table := m.GuessConstraintAndTable(stmt, name)
 		if chk != nil {
 			return m.DB.Exec(
@@ -613,7 +613,7 @@ func (m Migrator) CreateConstraint(value interface{}, name string) error {
 
 // DropConstraint drop constraint
 func (m Migrator) DropConstraint(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		constraint, chk, table := m.GuessConstraintAndTable(stmt, name)
 		if constraint != nil {
 			name = constraint.Name
@@ -627,7 +627,7 @@ func (m Migrator) DropConstraint(value interface{}, name string) error {
 // HasConstraint check has constraint or not
 func (m Migrator) HasConstraint(value interface{}, name string) bool {
 	var count int64
-	m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		currentDatabase := m.DB.Migrator().CurrentDatabase()
 		constraint, chk, table := m.GuessConstraintAndTable(stmt, name)
 		if constraint != nil {
@@ -646,7 +646,7 @@ func (m Migrator) HasConstraint(value interface{}, name string) bool {
 }
 
 // BuildIndexOptions build index options
-func (m Migrator) BuildIndexOptions(opts []schema.IndexOption, stmt *zdpgo_orm.Statement) (results []interface{}) {
+func (m Migrator) BuildIndexOptions(opts []schema.IndexOption, stmt *gorm.Statement) (results []interface{}) {
 	for _, opt := range opts {
 		str := stmt.Quote(opt.DBName)
 		if opt.Expression != "" {
@@ -669,12 +669,12 @@ func (m Migrator) BuildIndexOptions(opts []schema.IndexOption, stmt *zdpgo_orm.S
 
 // BuildIndexOptionsInterface build index options interface
 type BuildIndexOptionsInterface interface {
-	BuildIndexOptions([]schema.IndexOption, *zdpgo_orm.Statement) []interface{}
+	BuildIndexOptions([]schema.IndexOption, *gorm.Statement) []interface{}
 }
 
 // CreateIndex create index `name`
 func (m Migrator) CreateIndex(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if idx := stmt.Schema.LookIndex(name); idx != nil {
 			opts := m.DB.Migrator().(BuildIndexOptionsInterface).BuildIndexOptions(idx.Fields, stmt)
 			values := []interface{}{clause.Column{Name: idx.Name}, m.CurrentTable(stmt), opts}
@@ -706,7 +706,7 @@ func (m Migrator) CreateIndex(value interface{}, name string) error {
 
 // DropIndex drop index `name`
 func (m Migrator) DropIndex(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if idx := stmt.Schema.LookIndex(name); idx != nil {
 			name = idx.Name
 		}
@@ -718,7 +718,7 @@ func (m Migrator) DropIndex(value interface{}, name string) error {
 // HasIndex check has index `name` or not
 func (m Migrator) HasIndex(value interface{}, name string) bool {
 	var count int64
-	m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		currentDatabase := m.DB.Migrator().CurrentDatabase()
 		if idx := stmt.Schema.LookIndex(name); idx != nil {
 			name = idx.Name
@@ -735,7 +735,7 @@ func (m Migrator) HasIndex(value interface{}, name string) bool {
 
 // RenameIndex rename index from oldName to newName
 func (m Migrator) RenameIndex(value interface{}, oldName, newName string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		return m.DB.Exec(
 			"ALTER TABLE ? RENAME INDEX ? TO ?",
 			m.CurrentTable(stmt), clause.Column{Name: oldName}, clause.Column{Name: newName},
@@ -752,7 +752,7 @@ func (m Migrator) CurrentDatabase() (name string) {
 // ReorderModels reorder models according to constraint dependencies
 func (m Migrator) ReorderModels(values []interface{}, autoAdd bool) (results []interface{}) {
 	type Dependency struct {
-		*zdpgo_orm.Statement
+		*gorm.Statement
 		Depends []*schema.Schema
 	}
 
@@ -767,7 +767,7 @@ func (m Migrator) ReorderModels(values []interface{}, autoAdd bool) (results []i
 
 	parseDependence = func(value interface{}, addToList bool) {
 		dep := Dependency{
-			Statement: &zdpgo_orm.Statement{DB: m.DB, Dest: value},
+			Statement: &gorm.Statement{DB: m.DB, Dest: value},
 		}
 		beDependedOn := map[*schema.Schema]bool{}
 		// support for special table name
@@ -849,7 +849,7 @@ func (m Migrator) ReorderModels(values []interface{}, autoAdd bool) (results []i
 }
 
 // CurrentTable returns current statement's table expression
-func (m Migrator) CurrentTable(stmt *zdpgo_orm.Statement) interface{} {
+func (m Migrator) CurrentTable(stmt *gorm.Statement) interface{} {
 	if stmt.TableExpr != nil {
 		return *stmt.TableExpr
 	}
@@ -857,6 +857,6 @@ func (m Migrator) CurrentTable(stmt *zdpgo_orm.Statement) interface{} {
 }
 
 // GetIndexes return Indexes []zdpgo_orm.Index and execErr error
-func (m Migrator) GetIndexes(dst interface{}) ([]zdpgo_orm.Index, error) {
+func (m Migrator) GetIndexes(dst interface{}) ([]gorm.Index, error) {
 	return nil, errors.New("not support")
 }

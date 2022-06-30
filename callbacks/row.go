@@ -1,10 +1,10 @@
 package callbacks
 
 import (
-	"github.com/zhangdapeng520/zdpgo_orm"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 )
 
-func RowQuery(db *zdpgo_orm.DB) {
+func RowQuery(db *gorm.DB) {
 	if db.Error == nil {
 		BuildQuerySQL(db)
 		if db.DryRun {

@@ -2,15 +2,15 @@ package callbacks
 
 import (
 	"fmt"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
 	"github.com/zhangdapeng520/zdpgo_orm/utils"
 )
 
-func preload(tx *zdpgo_orm.DB, rel *schema.Relationship, conds []interface{}, preloads map[string][]interface{}) error {
+func preload(tx *gorm.DB, rel *schema.Relationship, conds []interface{}, preloads map[string][]interface{}) error {
 	var (
 		reflectValue     = tx.Statement.ReflectValue
 		relForeignKeys   []string
@@ -104,7 +104,7 @@ func preload(tx *zdpgo_orm.DB, rel *schema.Relationship, conds []interface{}, pr
 
 	if len(values) != 0 {
 		for _, cond := range conds {
-			if fc, ok := cond.(func(*zdpgo_orm.DB) *zdpgo_orm.DB); ok {
+			if fc, ok := cond.(func(*gorm.DB) *gorm.DB); ok {
 				tx = fc(tx)
 			} else {
 				inlineConds = append(inlineConds, cond)

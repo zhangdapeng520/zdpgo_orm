@@ -5,12 +5,11 @@ package main
 @Author : 张大鹏
 @File : main
 @Software: Goland2021.3.1
-@Description: 创建记录
+@Description: 根据map创建
 */
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"time"
@@ -27,19 +26,20 @@ type User struct {
 
 func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(gorm.Open(dsn), &mysql.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic(err)
 	}
 
 	// 创建数据库表
 	db.AutoMigrate(&User{})
+	db.Model(&User{}).Create(map[string]interface{}{
+		"Name": "张大鹏", "Age": 18,
+	})
 
-	// 使用 CreateInBatches 分批创建时，你可以指定每批的数量，例如：
-	var users = []User{{Name: "张珊珊1"}, {Name: "李思思2"}, {Name: "王舞儿3"}}
-	db.CreateInBatches(users, 100)
-
-	for _, user := range users {
-		fmt.Println(user.ID)
-	}
+	// batch insert from `[]map[string]interface{}{}`
+	db.Model(&User{}).Create([]map[string]interface{}{
+		{"Name": "张大鹏_1", "Age": 18},
+		{"Name": "张大鹏_2", "Age": 20},
+	})
 }

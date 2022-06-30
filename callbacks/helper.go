@@ -1,15 +1,15 @@
 package callbacks
 
 import (
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 	"sort"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 )
 
 // ConvertMapToValuesForCreate convert map to values
-func ConvertMapToValuesForCreate(stmt *zdpgo_orm.Statement, mapValue map[string]interface{}) (values clause.Values) {
+func ConvertMapToValuesForCreate(stmt *gorm.Statement, mapValue map[string]interface{}) (values clause.Values) {
 	values.Columns = make([]clause.Column, 0, len(mapValue))
 	selectColumns, restricted := stmt.SelectAndOmitColumns(true, false)
 
@@ -40,13 +40,13 @@ func ConvertMapToValuesForCreate(stmt *zdpgo_orm.Statement, mapValue map[string]
 }
 
 // ConvertSliceOfMapToValuesForCreate convert slice of map to values
-func ConvertSliceOfMapToValuesForCreate(stmt *zdpgo_orm.Statement, mapValues []map[string]interface{}) (values clause.Values) {
+func ConvertSliceOfMapToValuesForCreate(stmt *gorm.Statement, mapValues []map[string]interface{}) (values clause.Values) {
 	columns := make([]string, 0, len(mapValues))
 
 	// when the length of mapValues is zero,return directly here
 	// no need to call stmt.SelectAndOmitColumns method
 	if len(mapValues) == 0 {
-		stmt.AddError(zdpgo_orm.ErrEmptySlice)
+		stmt.AddError(gorm.ErrEmptySlice)
 		return
 	}
 
@@ -93,20 +93,20 @@ func ConvertSliceOfMapToValuesForCreate(stmt *zdpgo_orm.Statement, mapValues []m
 	return
 }
 
-func hasReturning(tx *zdpgo_orm.DB, supportReturning bool) (bool, zdpgo_orm.ScanMode) {
+func hasReturning(tx *gorm.DB, supportReturning bool) (bool, gorm.ScanMode) {
 	if supportReturning {
 		if c, ok := tx.Statement.Clauses["RETURNING"]; ok {
 			returning, _ := c.Expression.(clause.Returning)
 			if len(returning.Columns) == 0 || (len(returning.Columns) == 1 && returning.Columns[0].Name == "*") {
 				return true, 0
 			}
-			return true, zdpgo_orm.ScanUpdate
+			return true, gorm.ScanUpdate
 		}
 	}
 	return false, 0
 }
 
-func checkMissingWhereConditions(db *zdpgo_orm.DB) {
+func checkMissingWhereConditions(db *gorm.DB) {
 	if !db.AllowGlobalUpdate && db.Error == nil {
 		where, withCondition := db.Statement.Clauses["WHERE"]
 		if withCondition {
@@ -116,7 +116,7 @@ func checkMissingWhereConditions(db *zdpgo_orm.DB) {
 			}
 		}
 		if !withCondition {
-			db.AddError(zdpgo_orm.ErrMissingWhereClause)
+			db.AddError(gorm.ErrMissingWhereClause)
 		}
 		return
 	}

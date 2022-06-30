@@ -3,7 +3,7 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"strings"
 
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
@@ -27,7 +27,7 @@ func (m Migrator) FullDataTypeOf(field *schema.Field) clause.Expr {
 }
 
 func (m Migrator) AlterColumn(value interface{}, field string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if field := stmt.Schema.LookUpField(field); field != nil {
 			return m.DB.Exec(
 				"ALTER TABLE ? MODIFY COLUMN ? ?",
@@ -39,7 +39,7 @@ func (m Migrator) AlterColumn(value interface{}, field string) error {
 }
 
 func (m Migrator) RenameColumn(value interface{}, oldName, newName string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if !m.Dialector.DontSupportRenameColumn {
 			return m.Migrator.RenameColumn(value, oldName, newName)
 		}
@@ -69,7 +69,7 @@ func (m Migrator) RenameColumn(value interface{}, oldName, newName string) error
 
 func (m Migrator) RenameIndex(value interface{}, oldName, newName string) error {
 	if !m.Dialector.DontSupportRenameIndex {
-		return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+		return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 			return m.DB.Exec(
 				"ALTER TABLE ? RENAME INDEX ? TO ?",
 				clause.Table{Name: stmt.Table}, clause.Column{Name: oldName}, clause.Column{Name: newName},
@@ -77,7 +77,7 @@ func (m Migrator) RenameIndex(value interface{}, oldName, newName string) error 
 		})
 	}
 
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		err := m.DropIndex(value, oldName)
 		if err != nil {
 			return err
@@ -109,10 +109,10 @@ func (m Migrator) RenameIndex(value interface{}, oldName, newName string) error 
 
 func (m Migrator) DropTable(values ...interface{}) error {
 	values = m.ReorderModels(values, false)
-	return m.DB.Connection(func(tx *zdpgo_orm.DB) error {
+	return m.DB.Connection(func(tx *gorm.DB) error {
 		tx.Exec("SET FOREIGN_KEY_CHECKS = 0;")
 		for i := len(values) - 1; i >= 0; i-- {
-			if err := m.RunWithValue(values[i], func(stmt *zdpgo_orm.Statement) error {
+			if err := m.RunWithValue(values[i], func(stmt *gorm.Statement) error {
 				return tx.Exec("DROP TABLE IF EXISTS ? CASCADE", clause.Table{Name: stmt.Table}).Error
 			}); err != nil {
 				return err
@@ -123,7 +123,7 @@ func (m Migrator) DropTable(values ...interface{}) error {
 }
 
 func (m Migrator) DropConstraint(value interface{}, name string) error {
-	return m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		constraint, chk, table := m.GuessConstraintAndTable(stmt, name)
 		if chk != nil {
 			return m.DB.Exec("ALTER TABLE ? DROP CHECK ?", clause.Table{Name: stmt.Table}, clause.Column{Name: chk.Name}).Error
@@ -139,13 +139,13 @@ func (m Migrator) DropConstraint(value interface{}, name string) error {
 }
 
 // ColumnTypes column types return columnTypes,error
-func (m Migrator) ColumnTypes(value interface{}) ([]zdpgo_orm.ColumnType, error) {
-	columnTypes := make([]zdpgo_orm.ColumnType, 0)
-	err := m.RunWithValue(value, func(stmt *zdpgo_orm.Statement) error {
+func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
+	columnTypes := make([]gorm.ColumnType, 0)
+	err := m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		var (
 			currentDatabase = m.DB.Migrator().CurrentDatabase()
 			columnTypeSQL   = "SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale "
-			rows, err       = m.DB.Session(&zdpgo_orm.Session{}).Table(stmt.Table).Limit(1).Rows()
+			rows, err       = m.DB.Session(&gorm.Session{}).Table(stmt.Table).Limit(1).Rows()
 		)
 
 		if err != nil {

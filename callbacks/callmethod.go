@@ -1,13 +1,12 @@
 package callbacks
 
 import (
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
-
-	"github.com/zhangdapeng520/zdpgo_orm"
 )
 
-func callMethod(db *zdpgo_orm.DB, fc func(value interface{}, tx *zdpgo_orm.DB) bool) {
-	tx := db.Session(&zdpgo_orm.Session{NewDB: true})
+func callMethod(db *gorm.DB, fc func(value interface{}, tx *gorm.DB) bool) {
+	tx := db.Session(&gorm.Session{NewDB: true})
 	if called := fc(db.Statement.ReflectValue.Interface(), tx); !called {
 		switch db.Statement.ReflectValue.Kind() {
 		case reflect.Slice, reflect.Array:

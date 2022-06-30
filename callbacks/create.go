@@ -2,18 +2,18 @@ package callbacks
 
 import (
 	"fmt"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
 	"github.com/zhangdapeng520/zdpgo_orm/utils"
 )
 
 // BeforeCreate before create hooks
-func BeforeCreate(db *zdpgo_orm.DB) {
+func BeforeCreate(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && (db.Statement.Schema.BeforeSave || db.Statement.Schema.BeforeCreate) {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) (called bool) {
+		callMethod(db, func(value interface{}, tx *gorm.DB) (called bool) {
 			if db.Statement.Schema.BeforeSave {
 				if i, ok := value.(BeforeSaveInterface); ok {
 					called = true
@@ -33,10 +33,10 @@ func BeforeCreate(db *zdpgo_orm.DB) {
 }
 
 // Create create hook
-func Create(config *Config) func(db *zdpgo_orm.DB) {
+func Create(config *Config) func(db *gorm.DB) {
 	supportReturning := utils.Contains(config.CreateClauses, "RETURNING")
 
-	return func(db *zdpgo_orm.DB) {
+	return func(db *gorm.DB) {
 		if db.Error != nil {
 			return
 		}
@@ -76,7 +76,7 @@ func Create(config *Config) func(db *zdpgo_orm.DB) {
 		if ok {
 			if c, ok := db.Statement.Clauses["ON CONFLICT"]; ok {
 				if onConflict, _ := c.Expression.(clause.OnConflict); onConflict.DoNothing {
-					mode |= zdpgo_orm.ScanOnConflictDoNothing
+					mode |= gorm.ScanOnConflictDoNothing
 				}
 			}
 
@@ -87,7 +87,7 @@ func Create(config *Config) func(db *zdpgo_orm.DB) {
 				defer func() {
 					db.AddError(rows.Close())
 				}()
-				zdpgo_orm.Scan(rows, db, mode)
+				gorm.Scan(rows, db, mode)
 			}
 
 			return
@@ -151,9 +151,9 @@ func Create(config *Config) func(db *zdpgo_orm.DB) {
 }
 
 // AfterCreate after create hooks
-func AfterCreate(db *zdpgo_orm.DB) {
+func AfterCreate(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && (db.Statement.Schema.AfterSave || db.Statement.Schema.AfterCreate) {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) (called bool) {
+		callMethod(db, func(value interface{}, tx *gorm.DB) (called bool) {
 			if db.Statement.Schema.AfterCreate {
 				if i, ok := value.(AfterCreateInterface); ok {
 					called = true
@@ -173,7 +173,7 @@ func AfterCreate(db *zdpgo_orm.DB) {
 }
 
 // ConvertToCreateValues convert to create values
-func ConvertToCreateValues(stmt *zdpgo_orm.Statement) (values clause.Values) {
+func ConvertToCreateValues(stmt *gorm.Statement) (values clause.Values) {
 	curTime := stmt.DB.NowFunc()
 
 	switch value := stmt.Dest.(type) {
@@ -207,7 +207,7 @@ func ConvertToCreateValues(stmt *zdpgo_orm.Statement) (values clause.Values) {
 		case reflect.Slice, reflect.Array:
 			rValLen := stmt.ReflectValue.Len()
 			if rValLen == 0 {
-				stmt.AddError(zdpgo_orm.ErrEmptySlice)
+				stmt.AddError(gorm.ErrEmptySlice)
 				return
 			}
 
@@ -219,7 +219,7 @@ func ConvertToCreateValues(stmt *zdpgo_orm.Statement) (values clause.Values) {
 			for i := 0; i < rValLen; i++ {
 				rv := reflect.Indirect(stmt.ReflectValue.Index(i))
 				if !rv.IsValid() {
-					stmt.AddError(fmt.Errorf("slice data #%v is invalid: %w", i, zdpgo_orm.ErrInvalidData))
+					stmt.AddError(fmt.Errorf("slice data #%v is invalid: %w", i, gorm.ErrInvalidData))
 					return
 				}
 
@@ -289,7 +289,7 @@ func ConvertToCreateValues(stmt *zdpgo_orm.Statement) (values clause.Values) {
 				}
 			}
 		default:
-			stmt.AddError(zdpgo_orm.ErrInvalidData)
+			stmt.AddError(gorm.ErrInvalidData)
 		}
 	}
 

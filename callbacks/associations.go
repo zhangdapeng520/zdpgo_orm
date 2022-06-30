@@ -1,17 +1,17 @@
 package callbacks
 
 import (
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 	"strings"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
 	"github.com/zhangdapeng520/zdpgo_orm/utils"
 )
 
-func SaveBeforeAssociations(create bool) func(db *zdpgo_orm.DB) {
-	return func(db *zdpgo_orm.DB) {
+func SaveBeforeAssociations(create bool) func(db *gorm.DB) {
+	return func(db *gorm.DB) {
 		if db.Error == nil && db.Statement.Schema != nil {
 			selectColumns, restricted := db.Statement.SelectAndOmitColumns(create, !create)
 
@@ -92,8 +92,8 @@ func SaveBeforeAssociations(create bool) func(db *zdpgo_orm.DB) {
 	}
 }
 
-func SaveAfterAssociations(create bool) func(db *zdpgo_orm.DB) {
-	return func(db *zdpgo_orm.DB) {
+func SaveAfterAssociations(create bool) func(db *gorm.DB) {
+	return func(db *gorm.DB) {
 		if db.Error == nil && db.Statement.Schema != nil {
 			selectColumns, restricted := db.Statement.SelectAndOmitColumns(create, !create)
 
@@ -313,7 +313,7 @@ func SaveAfterAssociations(create bool) func(db *zdpgo_orm.DB) {
 				}
 
 				if joins.Len() > 0 {
-					db.AddError(db.Session(&zdpgo_orm.Session{NewDB: true}).Clauses(clause.OnConflict{DoNothing: true}).Session(&zdpgo_orm.Session{
+					db.AddError(db.Session(&gorm.Session{NewDB: true}).Clauses(clause.OnConflict{DoNothing: true}).Session(&gorm.Session{
 						SkipHooks:                db.Statement.SkipHooks,
 						DisableNestedTransaction: true,
 					}).Create(joins.Interface()).Error)
@@ -323,7 +323,7 @@ func SaveAfterAssociations(create bool) func(db *zdpgo_orm.DB) {
 	}
 }
 
-func onConflictOption(stmt *zdpgo_orm.Statement, s *schema.Schema, defaultUpdatingColumns []string) (onConflict clause.OnConflict) {
+func onConflictOption(stmt *gorm.Statement, s *schema.Schema, defaultUpdatingColumns []string) (onConflict clause.OnConflict) {
 	if len(defaultUpdatingColumns) > 0 || stmt.DB.FullSaveAssociations {
 		onConflict.Columns = make([]clause.Column, 0, len(s.PrimaryFieldDBNames))
 		for _, dbName := range s.PrimaryFieldDBNames {
@@ -341,7 +341,7 @@ func onConflictOption(stmt *zdpgo_orm.Statement, s *schema.Schema, defaultUpdati
 	return
 }
 
-func saveAssociations(db *zdpgo_orm.DB, rel *schema.Relationship, rValues reflect.Value, selectColumns map[string]bool, restricted bool, defaultUpdatingColumns []string) error {
+func saveAssociations(db *gorm.DB, rel *schema.Relationship, rValues reflect.Value, selectColumns map[string]bool, restricted bool, defaultUpdatingColumns []string) error {
 	// stop save association loop
 	if checkAssociationsSaved(db, rValues) {
 		return nil
@@ -369,7 +369,7 @@ func saveAssociations(db *zdpgo_orm.DB, rel *schema.Relationship, rValues reflec
 		}
 	}
 
-	tx := db.Session(&zdpgo_orm.Session{NewDB: true}).Clauses(onConflict).Session(&zdpgo_orm.Session{
+	tx := db.Session(&gorm.Session{NewDB: true}).Clauses(onConflict).Session(&gorm.Session{
 		FullSaveAssociations:     db.FullSaveAssociations,
 		SkipHooks:                db.Statement.SkipHooks,
 		DisableNestedTransaction: true,
@@ -402,7 +402,7 @@ func saveAssociations(db *zdpgo_orm.DB, rel *schema.Relationship, rValues reflec
 // if values kind is Slice/Array, check all items have been saved
 var visitMapStoreKey = "gorm:saved_association_map"
 
-func checkAssociationsSaved(db *zdpgo_orm.DB, values reflect.Value) bool {
+func checkAssociationsSaved(db *gorm.DB, values reflect.Value) bool {
 	if visit, ok := db.Get(visitMapStoreKey); ok {
 		if v, ok := visit.(*visitMap); ok {
 			if loadOrStoreVisitMap(v, values) {

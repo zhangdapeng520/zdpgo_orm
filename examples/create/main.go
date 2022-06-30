@@ -10,14 +10,13 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/zhangdapeng520/zdpgo_orm"
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"time"
 )
 
 type User struct {
-	zdpgo_orm.Model
+	gorm.Model
 	Name         string         // 姓名
 	Email        string         // 邮箱
 	Age          uint8          // 年龄
@@ -26,17 +25,21 @@ type User struct {
 }
 
 func main() {
-	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := zdpgo_orm.Open(mysql.Open(dsn), &zdpgo_orm.Config{})
+	o, err := zdpgo_orm.NewWithConfig(&zdpgo_orm.Config{
+		Host:     "127.0.0.1",
+		Port:     3306,
+		Username: "root",
+		Password: "root",
+		Database: "book",
+	})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
 	// 创建数据库表
-	db.AutoMigrate(&User{})
+	o.CreateTables(&User{})
 
 	// 创建用户
 	var user = User{Name: "张大鹏", Age: 18, Birthday: time.Now()}
-	result := db.Create(&user) // 通过数据的指针来创建
-	fmt.Println(result)
+	o.Add(&user) // 通过数据的指针来创建
 }

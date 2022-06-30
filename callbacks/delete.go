@@ -1,18 +1,18 @@
 package callbacks
 
 import (
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"reflect"
 	"strings"
 
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
 	"github.com/zhangdapeng520/zdpgo_orm/utils"
 )
 
-func BeforeDelete(db *zdpgo_orm.DB) {
+func BeforeDelete(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && db.Statement.Schema.BeforeDelete {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) bool {
+		callMethod(db, func(value interface{}, tx *gorm.DB) bool {
 			if i, ok := value.(BeforeDeleteInterface); ok {
 				db.AddError(i.BeforeDelete(tx))
 				return true
@@ -23,7 +23,7 @@ func BeforeDelete(db *zdpgo_orm.DB) {
 	}
 }
 
-func DeleteBeforeAssociations(db *zdpgo_orm.DB) {
+func DeleteBeforeAssociations(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil {
 		selectColumns, restricted := db.Statement.SelectAndOmitColumns(true, false)
 		if !restricted {
@@ -44,7 +44,7 @@ func DeleteBeforeAssociations(db *zdpgo_orm.DB) {
 			case schema.HasOne, schema.HasMany:
 				queryConds := rel.ToQueryConditions(db.Statement.Context, db.Statement.ReflectValue)
 				modelValue := reflect.New(rel.FieldSchema.ModelType).Interface()
-				tx := db.Session(&zdpgo_orm.Session{NewDB: true}).Model(modelValue)
+				tx := db.Session(&gorm.Session{NewDB: true}).Model(modelValue)
 				withoutConditions := false
 				if db.Statement.Unscoped {
 					tx = tx.Unscoped()
@@ -82,7 +82,7 @@ func DeleteBeforeAssociations(db *zdpgo_orm.DB) {
 					relForeignKeys = make([]string, 0, len(rel.References))
 					modelValue     = reflect.New(rel.JoinTable.ModelType).Interface()
 					table          = rel.JoinTable.Table
-					tx             = db.Session(&zdpgo_orm.Session{NewDB: true}).Model(modelValue).Table(table)
+					tx             = db.Session(&gorm.Session{NewDB: true}).Model(modelValue).Table(table)
 				)
 
 				for _, ref := range rel.References {
@@ -110,10 +110,10 @@ func DeleteBeforeAssociations(db *zdpgo_orm.DB) {
 	}
 }
 
-func Delete(config *Config) func(db *zdpgo_orm.DB) {
+func Delete(config *Config) func(db *gorm.DB) {
 	supportReturning := utils.Contains(config.DeleteClauses, "RETURNING")
 
-	return func(db *zdpgo_orm.DB) {
+	return func(db *gorm.DB) {
 		if db.Error != nil {
 			return
 		}
@@ -165,16 +165,16 @@ func Delete(config *Config) func(db *zdpgo_orm.DB) {
 			}
 
 			if rows, err := db.Statement.ConnPool.QueryContext(db.Statement.Context, db.Statement.SQL.String(), db.Statement.Vars...); db.AddError(err) == nil {
-				zdpgo_orm.Scan(rows, db, mode)
+				gorm.Scan(rows, db, mode)
 				db.AddError(rows.Close())
 			}
 		}
 	}
 }
 
-func AfterDelete(db *zdpgo_orm.DB) {
+func AfterDelete(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && db.Statement.Schema.AfterDelete {
-		callMethod(db, func(value interface{}, tx *zdpgo_orm.DB) bool {
+		callMethod(db, func(value interface{}, tx *gorm.DB) bool {
 			if i, ok := value.(AfterDeleteInterface); ok {
 				db.AddError(i.AfterDelete(tx))
 				return true

@@ -11,13 +11,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"time"
 )
 
 type User struct {
-	zdpgo_orm.Model
+	gorm.Model
 	Name         string         // 姓名
 	Email        string         // 邮箱
 	Age          uint8          // 年龄
@@ -26,23 +26,23 @@ type User struct {
 }
 
 //GORM 允许用户定义的钩子有 BeforeSave, BeforeCreate, AfterSave, AfterCreate 创建记录时将调用这些钩子方法，请参考 Hooks 中关于生命周期的详细信息
-func (u *User) BeforeCreate(tx *zdpgo_orm.DB) (err error) {
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	fmt.Println("在创建之前执行了。。。")
 	return
 }
-func (u *User) AfterCreate(tx *zdpgo_orm.DB) (err error) {
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
 	fmt.Println("在创建之后执行了。。。")
 	return
 }
 
-func (u *User) AfterSave(tx *zdpgo_orm.DB) (err error) {
+func (u *User) AfterSave(tx *gorm.DB) (err error) {
 	fmt.Println("在创建之后执行了111。。。")
 	return
 }
 
 func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := zdpgo_orm.Open(mysql.Open(dsn), &zdpgo_orm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}

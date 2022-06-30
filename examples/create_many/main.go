@@ -11,13 +11,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
+	"github.com/zhangdapeng520/zdpgo_orm/gorm"
 	"time"
 )
 
 type User struct {
-	zdpgo_orm.Model
+	gorm.Model
 	Name         string         // 姓名
 	Email        string         // 邮箱
 	Age          uint8          // 年龄
@@ -27,7 +27,7 @@ type User struct {
 
 func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := zdpgo_orm.Open(mysql.Open(dsn), &zdpgo_orm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
