@@ -38,7 +38,7 @@ type Dialector struct {
 }
 
 var (
-	// CreateClauses z01_create clauses
+	// CreateClauses z01_add clauses
 	CreateClauses = []string{"INSERT", "VALUES", "ON CONFLICT"}
 	// QueryClauses query clauses
 	QueryClauses = []string{}

@@ -15,12 +15,12 @@ import (
 func initializeCallbacks(db *DB) *callbacks {
 	return &callbacks{
 		processors: map[string]*processor{
-			"z01_create": {db: db},
-			"query":      {db: db},
-			"update":     {db: db},
-			"delete":     {db: db},
-			"row":        {db: db},
-			"raw":        {db: db},
+			"z01_add": {db: db},
+			"query":   {db: db},
+			"update":  {db: db},
+			"delete":  {db: db},
+			"row":     {db: db},
+			"raw":     {db: db},
 		},
 	}
 }
@@ -49,7 +49,7 @@ type callback struct {
 }
 
 func (cs *callbacks) Create() *processor {
-	return cs.processors["z01_create"]
+	return cs.processors["z01_add"]
 }
 
 func (cs *callbacks) Query() *processor {

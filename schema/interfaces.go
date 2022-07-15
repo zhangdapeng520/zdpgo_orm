@@ -15,7 +15,7 @@ type FieldNewValuePool interface {
 	Put(interface{})
 }
 
-// CreateClausesInterface z01_create clauses interface
+// CreateClausesInterface z01_add clauses interface
 type CreateClausesInterface interface {
 	CreateClauses(*Field) []clause.Interface
 }

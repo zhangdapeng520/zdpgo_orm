@@ -9,9 +9,10 @@ package zdpgo_orm
 */
 
 type Config struct {
-	Host     string `yaml:"host" json:"host"`
-	Port     int    `yaml:"port" json:"port"`
-	Username string `yaml:"username" json:"username"`
-	Password string `yaml:"password" json:"password"`
-	Database string `yaml:"database" json:"database"`
+	Host      string `yaml:"host" json:"host"`
+	Port      int    `yaml:"port" json:"port"`
+	Username  string `yaml:"username" json:"username"`
+	Password  string `yaml:"password" json:"password"`
+	Database  string `yaml:"database" json:"database"`
+	BatchSize int    `yaml:"batch_size" json:"batch_size"`
 }

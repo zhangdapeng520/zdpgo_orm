@@ -9,19 +9,14 @@ package main
 */
 
 import (
-	"database/sql"
 	"github.com/zhangdapeng520/zdpgo_orm"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
-	"time"
 )
 
 type User struct {
 	gorm.Model
-	Name         string         // 姓名
-	Email        string         // 邮箱
-	Age          uint8          // 年龄
-	Birthday     time.Time      // 生日
-	MemberNumber sql.NullString // 身份证号
+	Name string // 姓名
+	Age  uint8  // 年龄
 }
 
 func main() {
@@ -40,6 +35,6 @@ func main() {
 	o.CreateTables(&User{})
 
 	// 创建用户
-	var user = User{Name: "张大鹏", Age: 18, Birthday: time.Now()}
+	var user = User{Name: "张大鹏", Age: 18}
 	o.Add(&user) // 通过数据的指针来创建
 }

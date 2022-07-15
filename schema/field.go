@@ -360,7 +360,7 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
 		field.Updatable = true
 
 		if v != "<-" {
-			if !strings.Contains(v, "z01_create") {
+			if !strings.Contains(v, "z01_add") {
 				field.Creatable = false
 			}
 
@@ -433,7 +433,7 @@ func (schema *Schema) ParseField(fieldStruct reflect.StructField) *Field {
 	return field
 }
 
-// z01_create valuer, setter when parse struct
+// z01_add valuer, setter when parse struct
 func (field *Field) setupValuerAndSetter() {
 	// Setup NewValuePool
 	field.setupNewValuePool()

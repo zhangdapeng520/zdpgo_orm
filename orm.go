@@ -42,6 +42,9 @@ func NewWithConfig(config *Config) (*Orm, error) {
 	if config.Database == "" {
 		config.Database = "test"
 	}
+	if config.BatchSize == 0 {
+		config.BatchSize = 100
+	}
 	o.Config = config
 
 	// 连接
@@ -63,4 +66,8 @@ func (o *Orm) CreateTables(dest ...interface{}) error {
 
 func (o *Orm) Add(data interface{}) {
 	o.Db.Create(data)
+}
+
+func (o *Orm) AddMany(data interface{}) {
+	o.Db.CreateInBatches(data, o.Config.BatchSize)
 }
