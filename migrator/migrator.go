@@ -171,7 +171,7 @@ func (m Migrator) GetTables() (tableList []string, err error) {
 	return
 }
 
-// CreateTable create table in database for values
+// CreateTable z01_create table in database for values
 func (m Migrator) CreateTable(values ...interface{}) error {
 	for _, value := range m.ReorderModels(values, false) {
 		tx := m.DB.Session(&gorm.Session{})
@@ -316,7 +316,7 @@ func (m Migrator) RenameTable(oldName, newName interface{}) error {
 	return m.DB.Exec("ALTER TABLE ? RENAME TO ?", oldTable, newTable).Error
 }
 
-// AddColumn create `name` column for value
+// AddColumn z01_create `name` column for value
 func (m Migrator) AddColumn(value interface{}, name string) error {
 	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		// avoid using the same name field
@@ -510,7 +510,7 @@ func (m Migrator) ColumnTypes(value interface{}) ([]gorm.ColumnType, error) {
 	return columnTypes, execErr
 }
 
-// CreateView create view
+// CreateView z01_create view
 func (m Migrator) CreateView(name string, option gorm.ViewOption) error {
 	return gorm.ErrNotImplemented
 }
@@ -587,7 +587,7 @@ func (m Migrator) GuessConstraintAndTable(stmt *gorm.Statement, name string) (_ 
 	return nil, nil, stmt.Schema.Table
 }
 
-// CreateConstraint create constraint
+// CreateConstraint z01_create constraint
 func (m Migrator) CreateConstraint(value interface{}, name string) error {
 	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		constraint, chk, table := m.GuessConstraintAndTable(stmt, name)
@@ -672,7 +672,7 @@ type BuildIndexOptionsInterface interface {
 	BuildIndexOptions([]schema.IndexOption, *gorm.Statement) []interface{}
 }
 
-// CreateIndex create index `name`
+// CreateIndex z01_create index `name`
 func (m Migrator) CreateIndex(value interface{}, name string) error {
 	return m.RunWithValue(value, func(stmt *gorm.Statement) error {
 		if idx := stmt.Schema.LookIndex(name); idx != nil {
@@ -700,7 +700,7 @@ func (m Migrator) CreateIndex(value interface{}, name string) error {
 			return m.DB.Exec(createIndexSQL, values...).Error
 		}
 
-		return fmt.Errorf("failed to create index with name %s", name)
+		return fmt.Errorf("failed to z01_create index with name %s", name)
 	})
 }
 

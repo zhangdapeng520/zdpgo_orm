@@ -10,9 +10,8 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+	"github.com/zhangdapeng520/zdpgo_orm/mysql"
 	"time"
 )
 
@@ -35,11 +34,8 @@ func main() {
 	// 创建数据库表
 	db.AutoMigrate(&User{})
 
-	// 要有效地插入大量记录，请将一个 slice 传递给 Create 方法。 GORM 将生成单独一条SQL语句来插入所有数据，并回填主键的值，钩子方法也会被调用。
-	var users = []User{{Name: "张珊珊"}, {Name: "李思思"}, {Name: "王舞儿"}}
-	db.Create(&users)
-
-	for _, user := range users {
-		fmt.Println(user.ID)
-	}
+	// 创建一个记录且一同忽略传递给略去的字段值。
+	var user = User{Name: "赵六", Age: 18, Birthday: time.Now()}
+	db.Select("Name", "Age", "CreatedAt").Create(&user)
+	// INSERT INTO `users` (`birthday`,`updated_at`) VALUES ("2020-01-01 00:00:00.000", "2020-07-04 11:05:21.775")
 }

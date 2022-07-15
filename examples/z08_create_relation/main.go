@@ -9,8 +9,8 @@ package main
 */
 
 import (
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+	"github.com/zhangdapeng520/zdpgo_orm/mysql"
 )
 
 type CreditCard struct {
@@ -27,7 +27,7 @@ type User struct {
 
 func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(gorm.Open(dsn), &mysql.Config{})
+	db, err := gorm.Open(mysql.Open(dsn))
 	if err != nil {
 		panic(err)
 	}

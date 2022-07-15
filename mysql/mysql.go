@@ -12,7 +12,7 @@ import (
 	"github.com/zhangdapeng520/zdpgo_orm/callbacks"
 	"github.com/zhangdapeng520/zdpgo_orm/clause"
 	//_ "github.com/go-sql-driver/mysql"
-	_ "github.com/zhangdapeng520/zdpgo_orm/driver/core/mysql"
+	_ "github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/logger"
 	"github.com/zhangdapeng520/zdpgo_orm/migrator"
 	"github.com/zhangdapeng520/zdpgo_orm/schema"
@@ -38,7 +38,7 @@ type Dialector struct {
 }
 
 var (
-	// CreateClauses create clauses
+	// CreateClauses z01_create clauses
 	CreateClauses = []string{"INSERT", "VALUES", "ON CONFLICT"}
 	// QueryClauses query clauses
 	QueryClauses = []string{}

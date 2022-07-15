@@ -10,7 +10,7 @@ import (
 	"github.com/zhangdapeng520/zdpgo_orm/utils"
 )
 
-// BeforeCreate before create hooks
+// BeforeCreate before z01_create hooks
 func BeforeCreate(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && (db.Statement.Schema.BeforeSave || db.Statement.Schema.BeforeCreate) {
 		callMethod(db, func(value interface{}, tx *gorm.DB) (called bool) {
@@ -32,7 +32,7 @@ func BeforeCreate(db *gorm.DB) {
 	}
 }
 
-// Create create hook
+// Create z01_create hook
 func Create(config *Config) func(db *gorm.DB) {
 	supportReturning := utils.Contains(config.CreateClauses, "RETURNING")
 
@@ -150,7 +150,7 @@ func Create(config *Config) func(db *gorm.DB) {
 	}
 }
 
-// AfterCreate after create hooks
+// AfterCreate after z01_create hooks
 func AfterCreate(db *gorm.DB) {
 	if db.Error == nil && db.Statement.Schema != nil && !db.Statement.SkipHooks && (db.Statement.Schema.AfterSave || db.Statement.Schema.AfterCreate) {
 		callMethod(db, func(value interface{}, tx *gorm.DB) (called bool) {
@@ -172,7 +172,7 @@ func AfterCreate(db *gorm.DB) {
 	}
 }
 
-// ConvertToCreateValues convert to create values
+// ConvertToCreateValues convert to z01_create values
 func ConvertToCreateValues(stmt *gorm.Statement) (values clause.Values) {
 	curTime := stmt.DB.NowFunc()
 

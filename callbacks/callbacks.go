@@ -41,7 +41,7 @@ func RegisterDefaultCallbacks(db *gorm.DB, config *Config) {
 	createCallback.Match(enableTransaction).Register("gorm:begin_transaction", BeginTransaction)
 	createCallback.Register("gorm:before_create", BeforeCreate)
 	createCallback.Register("gorm:save_before_associations", SaveBeforeAssociations(true))
-	createCallback.Register("gorm:create", Create(config))
+	createCallback.Register("gorm:z01_create", Create(config))
 	createCallback.Register("gorm:save_after_associations", SaveAfterAssociations(true))
 	createCallback.Register("gorm:after_create", AfterCreate)
 	createCallback.Match(enableTransaction).Register("gorm:commit_or_rollback_transaction", CommitOrRollbackTransaction)

@@ -5,13 +5,13 @@ package main
 @Author : 张大鹏
 @File : main
 @Software: Goland2021.3.1
-@Description: 创建记录
+@Description: 根据map创建
 */
 
 import (
 	"database/sql"
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+	"github.com/zhangdapeng520/zdpgo_orm/mysql"
 	"time"
 )
 
@@ -26,16 +26,20 @@ type User struct {
 
 func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn))
 	if err != nil {
 		panic(err)
 	}
 
 	// 创建数据库表
 	db.AutoMigrate(&User{})
+	db.Model(&User{}).Create(map[string]interface{}{
+		"Name": "张大鹏", "Age": 18,
+	})
 
-	// 创建记录并更新给出的字段。
-	var user = User{Name: "王五", Age: 18, Birthday: time.Now()}
-	db.Select("Name", "Age", "CreatedAt").Create(&user)
-	// INSERT INTO `users` (`name`,`age`,`created_at`) VALUES ("王五", 18, "2020-07-04 11:05:21.775")
+	// batch insert from `[]map[string]interface{}{}`
+	db.Model(&User{}).Create([]map[string]interface{}{
+		{"Name": "张大鹏_1", "Age": 18},
+		{"Name": "张大鹏_2", "Age": 20},
+	})
 }

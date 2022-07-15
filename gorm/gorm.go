@@ -18,7 +18,7 @@ const preparedStmtDBKey = "preparedStmt"
 
 // Config GORM config
 type Config struct {
-	// GORM perform single create, update, delete operations in transactions by default to ensure database data integrity
+	// GORM perform single z01_create, update, delete operations in transactions by default to ensure database data integrity
 	// You can disable it by setting `SkipDefaultTransaction` to true
 	SkipDefaultTransaction bool
 	// NamingStrategy tables, columns naming strategy
@@ -43,7 +43,7 @@ type Config struct {
 	AllowGlobalUpdate bool
 	// QueryFields executes the SQL query with all fields of the table
 	QueryFields bool
-	// CreateBatchSize default create batch size
+	// CreateBatchSize default z01_create batch size
 	CreateBatchSize int
 
 	// ClauseBuilders clause builder
@@ -94,7 +94,7 @@ type DB struct {
 	clone        int
 }
 
-// Session session config when create session with Session() method
+// Session session config when z01_create session with Session() method
 type Session struct {
 	DryRun                   bool
 	PrepareStmt              bool
@@ -209,7 +209,7 @@ func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 	return
 }
 
-// Session create new db session
+// Session z01_create new db session
 func (db *DB) Session(config *Session) *DB {
 	var (
 		txConfig = *db.Config

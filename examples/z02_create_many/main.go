@@ -11,8 +11,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+	"github.com/zhangdapeng520/zdpgo_orm/mysql"
 	"time"
 )
 
@@ -35,9 +35,9 @@ func main() {
 	// 创建数据库表
 	db.AutoMigrate(&User{})
 
-	// 使用 CreateInBatches 分批创建时，你可以指定每批的数量，例如：
-	var users = []User{{Name: "张珊珊1"}, {Name: "李思思2"}, {Name: "王舞儿3"}}
-	db.CreateInBatches(users, 100)
+	// 要有效地插入大量记录，请将一个 slice 传递给 Create 方法。 GORM 将生成单独一条SQL语句来插入所有数据，并回填主键的值，钩子方法也会被调用。
+	var users = []User{{Name: "张珊珊"}, {Name: "李思思"}, {Name: "王舞儿"}}
+	db.Create(&users)
 
 	for _, user := range users {
 		fmt.Println(user.ID)

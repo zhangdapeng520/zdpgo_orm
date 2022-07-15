@@ -310,7 +310,7 @@ func (db *DB) FirstOrInit(dest interface{}, conds ...interface{}) (tx *DB) {
 	return
 }
 
-// FirstOrCreate gets the first matched record or create a new one with given conditions (only works with struct, map conditions)
+// FirstOrCreate gets the first matched record or z01_create a new one with given conditions (only works with struct, map conditions)
 func (db *DB) FirstOrCreate(dest interface{}, conds ...interface{}) (tx *DB) {
 	tx = db.getInstance()
 	queryTx := db.Session(&Session{}).Limit(1).Order(clause.OrderByColumn{

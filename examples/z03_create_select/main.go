@@ -10,8 +10,8 @@ package main
 
 import (
 	"database/sql"
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+	"github.com/zhangdapeng520/zdpgo_orm/mysql"
 	"time"
 )
 
@@ -28,14 +28,14 @@ func main() {
 	dsn := "root:root@tcp(127.0.0.1:3306)/book?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		panic(err)
 	}
 
 	// 创建数据库表
 	db.AutoMigrate(&User{})
 
-	// 创建一个记录且一同忽略传递给略去的字段值。
-	var user = User{Name: "赵六", Age: 18, Birthday: time.Now()}
+	// 创建记录并更新给出的字段。
+	var user = User{Name: "王五", Age: 18, Birthday: time.Now()}
 	db.Select("Name", "Age", "CreatedAt").Create(&user)
-	// INSERT INTO `users` (`birthday`,`updated_at`) VALUES ("2020-01-01 00:00:00.000", "2020-07-04 11:05:21.775")
+	// INSERT INTO `users` (`name`,`age`,`created_at`) VALUES ("王五", 18, "2020-07-04 11:05:21.775")
 }

@@ -2,8 +2,8 @@ package zdpgo_orm
 
 import (
 	"fmt"
-	"github.com/zhangdapeng520/zdpgo_orm/driver/mysql"
 	"github.com/zhangdapeng520/zdpgo_orm/gorm"
+	"github.com/zhangdapeng520/zdpgo_orm/mysql"
 )
 
 /*
